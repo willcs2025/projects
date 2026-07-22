@@ -11,7 +11,7 @@ class People:
         return f"People('{self.name}', {self.number})"
 
 
-# Conexão com o banco de dados
+
 conn = sqlite3.connect("contacts.db")
 c = conn.cursor()
 c.execute("CREATE TABLE IF NOT EXISTS contacts(name TEXT UNIQUE, number INTEGER)")
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     arg = parser.parse_args()
 
-    # Lógica dos Comandos
+    
     if arg.add:
         name = arg.name
         num = arg.number
