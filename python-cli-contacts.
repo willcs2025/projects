@@ -3,7 +3,7 @@ import argparse
 import sqlite3
 import os
 
-# Define o caminho absoluto para o banco de dados na sua pasta home do Linux
+
 DB_PATH = os.path.expanduser("~/.contacts.db")
 
 class Contact:
@@ -15,7 +15,7 @@ class Contact:
         return f"Contact('{self.name}', {self.number})"
 
 def get_connection():
-    """Cria a conexão e garante que a tabela existe."""
+    
     conn = sqlite3.connect(DB_PATH)
     with conn:
         conn.execute("CREATE TABLE IF NOT EXISTS contacts(name TEXT UNIQUE, number INTEGER)")
