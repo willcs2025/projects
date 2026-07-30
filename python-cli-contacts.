@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+import argparse
+import sqlite3
+import os
+
+# Define o caminho absoluto para o banco de dados na sua pasta home do Linux
+DB_PATH = os.path.expanduser("~/.contacts.db")
+
+class Contact:
+    def __init__(self, name, number):
+        self.name = name
+        self.number = number
+
+    def __repr__(self):
+        return f"Contact('{self.name}', {self.number})"
+
+def get_connection():
+    """Cria a conexão e garante que a tabela existe."""
+    conn = sqlite3.connect(DB_PATH)
+    with conn:
+        conn.execute("CREATE TABLE IF NOT EXISTS contacts(name TEXT UNIQUE, number INTEGER)")
+    return conn
+
+def add_contact(contact):
+    with get_connection() as conn:
+        conn.execute("INSERT INTO contacts VALUES(?,?)", (contact.name, contact.number))
+
+def search_contact(name):
+    with get_connection() as conn:
+        c = conn.cursor()
+        c.execute("SELECT * FROM contacts WHERE name=?", (name,))
+        return c.fetchall()
+
+def remove_contact(contact):
+    with get_connection() as conn:
+        conn.execute("DELETE FROM contacts WHERE name=? AND number=?", (contact.name, contact.number))
+
+def main():
+    parser = argparse.ArgumentParser(
+        prog="contacts",
+        description="A tool for adding, searching or deleting a contact"
+    )
+
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--show", "-s", help="Option for searching a contact", action="store_true")
+    group.add_argument("--add", "-a", help="Option for adding a contact", action="store_true")
+    group.add_argument("--delete", "-d", help="Option for deleting a contact", action="store_true")
+    
+    parser.add_argument("--name", "-n", help="Name of the contact", action="store", type=str)
+    parser.add_argument("--number", "-no", help="Number of the contact", action="store", type=int)
+
+    arg = parser.parse_args()
+
+    if arg.add:
+        if arg.name and arg.number:
+            contact = Contact(arg.name, arg.number)
+            try:
+                add_contact(contact)
+                print(f"Contact '{arg.name}' added successfully.")
+            except sqlite3.IntegrityError:
+                print("Error: A contact with this name already exists.")
+        else:
+            print("Please provide both name and number to add a contact.")
+
+    elif arg.show:
+        if arg.name:
+            result = search_contact(arg.name)
+            if result:
+                print(f"Name: {result[0][0]}, Number: {result[0][1]}")
+            else:
+                print("There are no contacts with that name.")
+        else:
+            print("Please provide a name to search.")
+
+    elif arg.delete:
+        if arg.name and arg.number:
+            result = search_contact(arg.name)
+            if result:
+                contact = Contact(arg.name, arg.number)
+                remove_contact(contact)
+                print("Contact deleted successfully.")
+            else:
+                print("There are no contacts with that name.")
+        else:
+            print("Please provide both name and number to delete the contact.")
+    else:
+        parser.print_help()
+
+if __name__ == "__main__":
+    main()
